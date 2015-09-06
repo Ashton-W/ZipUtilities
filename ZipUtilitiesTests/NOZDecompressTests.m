@@ -35,6 +35,7 @@
 
 static NSArray *sFileNames = nil;
 static NSOperationQueue *sQueue = nil;
+static const NSTimeInterval expectationTimeout = 10.0f; // seconds
 
 @interface NOZDecompressTests : XCTestCase <NOZDecompressDelegate>
 @end
@@ -99,7 +100,13 @@ static NSOperationQueue *sQueue = nil;
     } else {
         [op start];
     }
-    [op waitUntilFinished];
+    
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Operation Finished"];
+    [sQueue addOperationWithBlock:^{
+        [expectation fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:expectationTimeout handler:nil];
+    
     NOZDecompressResult *result = op.result;
     XCTAssertNotNil(result);
     XCTAssertNil(result.operationError);
@@ -143,7 +150,13 @@ static NSOperationQueue *sQueue = nil;
     if (!yesBeforeEnqueueNoAfterEnqueue) {
         [op cancel];
     }
-    [op waitUntilFinished];
+    
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Operation Finished"];
+    [sQueue addOperationWithBlock:^{
+        [expectation fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:expectationTimeout handler:nil];
+    
     NOZDecompressResult *result = op.result;
     XCTAssertNotNil(result);
     XCTAssertNotNil(result.operationError);
@@ -156,7 +169,13 @@ static NSOperationQueue *sQueue = nil;
 {
     NOZDecompressOperation *op = [[NOZDecompressOperation alloc] initWithRequest:request delegate:self];
     [sQueue addOperation:op];
-    [op waitUntilFinished];
+    
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Operation Finished"];
+    [sQueue addOperationWithBlock:^{
+        [expectation fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:expectationTimeout handler:nil];
+    
     NOZDecompressResult *result = op.result;
     XCTAssertNotNil(result);
     XCTAssertNotNil(result.operationError);

@@ -34,6 +34,7 @@
 #define TESTLOG(...) ((void)0)
 
 static NSOperationQueue *sQueue = nil;
+static const NSTimeInterval expectationTimeout = 10.0f; // seconds
 
 @interface NOZCompressRequest (TestExposure)
 - (nonnull NSMutableArray *)mutableEntries;
@@ -125,7 +126,12 @@ static NSOperationQueue *sQueue = nil;
     } else {
         [op start];
     }
-    [op waitUntilFinished];
+    
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Operation Finished"];
+    [sQueue addOperationWithBlock:^{
+        [expectation fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:expectationTimeout handler:nil];
 
     NOZCompressResult *result = op.result;
     TESTLOG(@"Compression finished\n%@", @{ @"level" : @(level), @"duration" : @(result.duration), @"ratio" : @(result.compressionRatio) });
@@ -188,7 +194,12 @@ static NSOperationQueue *sQueue = nil;
     if (!yesBeforeEnqueueNoAfterEnqueue) {
         [op cancel];
     }
-    [op waitUntilFinished];
+    
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Operation Finished"];
+    [sQueue addOperationWithBlock:^{
+        [expectation fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:expectationTimeout handler:nil];
 
     XCTAssertTrue(op.isCancelled);
     XCTAssertNotNil(op.result);
@@ -202,7 +213,12 @@ static NSOperationQueue *sQueue = nil;
 {
     NOZCompressOperation *op = [[NOZCompressOperation alloc] initWithRequest:request delegate:self];
     [sQueue addOperation:op];
-    [op waitUntilFinished];
+    
+    XCTestExpectation *expectation = [self expectationWithDescription:@"Operation Finished"];
+    [sQueue addOperationWithBlock:^{
+        [expectation fulfill];
+    }];
+    [self waitForExpectationsWithTimeout:expectationTimeout handler:nil];
 
     NOZCompressResult *result = op.result;
     XCTAssertNotNil(result);
